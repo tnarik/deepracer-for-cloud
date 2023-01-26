@@ -118,7 +118,7 @@ function dr-logs-sagemaker {
     fi
   fi
 
-  if [[ "${DR_HOST_X,,}" == "true" && -n "$DISPLAY" ]];
+  if [[ "$(echo ${DR_HOST_X} | tr '[:upper:]' '[:lower:]')" == "true" && -n "$DISPLAY" ]];
   then
     if [ -x "$(command -v gnome-terminal)" ]; 
     then

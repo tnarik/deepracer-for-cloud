@@ -91,24 +91,24 @@ cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
 if [[ "${OPT_CLOUD}" == "aws" ]]; then
     AWS_EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
     AWS_REGION="`echo \"$AWS_EC2_AVAIL_ZONE\" | sed 's/[a-z]$//'`"
-    sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
-    sed -i "s/<LOCAL_PROFILE>/default/g" $INSTALL_DIR/system.env
+    sed -i.bak "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
+    sed -i.bak "s/<LOCAL_PROFILE>/default/g" $INSTALL_DIR/system.env
 elif [[ "${OPT_CLOUD}" == "azure" ]]; then
     AWS_REGION="us-east-1"
-    sed -i "s/<LOCAL_PROFILE>/azure/g" $INSTALL_DIR/system.env
-    sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
+    sed -i.bak "s/<LOCAL_PROFILE>/azure/g" $INSTALL_DIR/system.env
+    sed -i.bak "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
     echo "Please run 'aws configure --profile azure' to set the credentials"
 elif [[ "${OPT_CLOUD}" == "remote" ]]; then
     AWS_REGION="us-east-1"
-    sed -i "s/<LOCAL_PROFILE>/minio/g" $INSTALL_DIR/system.env
-    sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
+    sed -i.bak "s/<LOCAL_PROFILE>/minio/g" $INSTALL_DIR/system.env
+    sed -i.bak "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
     echo "Please run 'aws configure --profile minio' to set the credentials"
     echo "Please define DR_REMOTE_MINIO_URL in system.env to point to remote minio instance."
 else
     AWS_REGION="us-east-1"
     MINIO_PROFILE="minio"
-    sed -i "s/<LOCAL_PROFILE>/$MINIO_PROFILE/g" $INSTALL_DIR/system.env
-    sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
+    sed -i.bak "s/<LOCAL_PROFILE>/$MINIO_PROFILE/g" $INSTALL_DIR/system.env
+    sed -i.bak "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
 
     aws configure --profile $MINIO_PROFILE get aws_access_key_id > /dev/null 2> /dev/null
 
@@ -119,9 +119,9 @@ else
         aws configure --profile $MINIO_PROFILE set region us-east-1
     fi
 fi
-sed -i "s/<AWS_DR_BUCKET_ROLE>/to-be-defined/g" $INSTALL_DIR/system.env
-sed -i "s/<CLOUD_REPLACE>/$OPT_CLOUD/g" $INSTALL_DIR/system.env
-sed -i "s/<REGION_REPLACE>/$AWS_REGION/g" $INSTALL_DIR/system.env
+sed -i.bak "s/<AWS_DR_BUCKET_ROLE>/to-be-defined/g" $INSTALL_DIR/system.env
+sed -i.bak "s/<CLOUD_REPLACE>/$OPT_CLOUD/g" $INSTALL_DIR/system.env
+sed -i.bak "s/<REGION_REPLACE>/$AWS_REGION/g" $INSTALL_DIR/system.env
 
 
 if [[ "${OPT_ARCH}" == "gpu" ]]; then
@@ -144,7 +144,7 @@ done
 
 # Download docker images. Change to build statements if locally built images are desired.
 COACH_VERSION=$(jq -r '.containers.rl_coach | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-sed -i "s/<COACH_TAG>/$COACH_VERSION/g" $INSTALL_DIR/system.env
+sed -i.bak "s/<COACH_TAG>/$COACH_VERSION/g" $INSTALL_DIR/system.env
 
 ROBOMAKER_VERSION=$(jq -r '.containers.robomaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
 if [ -n $ROBOMAKER_VERSION ]; then
@@ -152,7 +152,7 @@ if [ -n $ROBOMAKER_VERSION ]; then
 else   
     ROBOMAKER_VERSION=$CPU_LEVEL
 fi
-sed -i "s/<ROBO_TAG>/$ROBOMAKER_VERSION/g" $INSTALL_DIR/system.env
+sed -i.bak "s/<ROBO_TAG>/$ROBOMAKER_VERSION/g" $INSTALL_DIR/system.env
 
 SAGEMAKER_VERSION=$(jq -r '.containers.sagemaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
 if [ -n $SAGEMAKER_VERSION ]; then
@@ -160,7 +160,7 @@ if [ -n $SAGEMAKER_VERSION ]; then
 else   
     SAGEMAKER_VERSION=$SAGEMAKER_TAG
 fi
-sed -i "s/<SAGE_TAG>/$SAGEMAKER_VERSION/g" $INSTALL_DIR/system.env
+sed -i.bak "s/<SAGE_TAG>/$SAGEMAKER_VERSION/g" $INSTALL_DIR/system.env
 
 docker pull awsdeepracercommunity/deepracer-rlcoach:$COACH_VERSION
 docker pull awsdeepracercommunity/deepracer-robomaker:$ROBOMAKER_VERSION

@@ -8,8 +8,8 @@ function dr-update-env {
 
   if [[ -f "$DIR/system.env" ]]
   then
-    LINES=$(grep -v '^#' $DIR/system.env)
-    for l in $LINES; do
+    SYSTEMLINES=$(grep -v '^#' $DIR/system.env)
+    for l in $(echo $SYSTEMLINES); do
       env_var=$(echo $l | cut -f1 -d\=)
       env_val=$(echo $l | cut -f2 -d\=)
       eval "export $env_var=$env_val"
@@ -21,8 +21,8 @@ function dr-update-env {
 
   if [[ -f "$DR_CONFIG" ]]
   then
-    LINES=$(grep -v '^#' $DR_CONFIG)
-    for l in $LINES; do
+    SYSTEMLINES=$(grep -v '^#' $DR_CONFIG)
+    for l in $(echo $SYSTEMLINES); do
       env_var=$(echo $l | cut -f1 -d\=)
       env_val=$(echo $l | cut -f2 -d\=)
       eval "export $env_var=$env_val"
@@ -36,7 +36,7 @@ function dr-update-env {
     export DR_RUN_ID=0
   fi
 
-  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+  if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
   then
     export DR_ROBOMAKER_TRAIN_PORT=$(expr 8080 + $DR_RUN_ID)
     export DR_ROBOMAKER_EVAL_PORT=$(expr 8180 + $DR_RUN_ID)
@@ -49,7 +49,7 @@ function dr-update-env {
 
 }
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )" >/dev/null 2>&1 && pwd )"
 DIR="$( dirname $SCRIPT_DIR )"
 export DR_DIR=$DIR
 
@@ -66,8 +66,10 @@ else
   return 1
 fi
 
-# Check if Docker runs -- if not, then start it.
-if [[ "$(type service 2> /dev/null)" ]]; then
+# Check if Docker runs -- if not, then start it via service IF SUPPORTED.
+type service 2> /dev/null 1>&2
+retval=$?
+if [[ retval -eq 0 ]]; then
   service docker status > /dev/null || sudo service docker start
 fi
 
@@ -77,10 +79,10 @@ if [[ -z "${DR_DOCKER_STYLE}" ]]; then
   export DR_DOCKER_STYLE="swarm"
 fi
 
-if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
 then
   export DR_DOCKER_FILE_SEP="-c"
-  SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
+  SWARM_NODE=$(docker node inspect self | jq -r '.[0].ID')
   SWARM_NODE_UPDATE=$(docker node update --label-add Sagemaker=true $SWARM_NODE)
 else
   export DR_DOCKER_FILE_SEP="-f"
@@ -94,14 +96,14 @@ if [[ -n "${CUDA_VISIBLE_DEVICES}" ]]; then
 fi
 
 # Check if CUDA_VISIBLE_DEVICES is configured.
-if [ "${DR_CLOUD,,}" == "local" ] && [ -z "${DR_MINIO_IMAGE}" ]; then
+if [[ "$(echo ${DR_CLOUD} | tr '[:upper:]' '[:lower:]')" == "local" ]] && [ -z "${DR_MINIO_IMAGE}" ]; then
   echo "WARNING: You have not configured DR_MINIO_IMAGE in system.env."
   echo "         System will default to tag RELEASE.2022-10-24T18-35-07Z"
   export DR_MINIO_IMAGE="RELEASE.2022-10-24T18-35-07Z"
 fi
 
 # Prepare the docker compose files depending on parameters
-if [[ "${DR_CLOUD,,}" == "azure" ]];
+if [[ "$(echo ${DR_CLOUD} | tr '[:upper:]' '[:lower:]')" == "azure" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     export DR_MINIO_URL="http://minio:9000"
@@ -109,7 +111,7 @@ then
     DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
     DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
     DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-azure.yml"
-elif [[ "${DR_CLOUD,,}" == "local" ]];
+elif [[ "$(echo ${DR_CLOUD} | tr '[:upper:]' '[:lower:]')" == "local" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     export DR_MINIO_URL="http://minio:9000"
@@ -117,7 +119,7 @@ then
     DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
     DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
     DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local.yml"
-elif [[ "${DR_CLOUD,,}" == "remote" ]];
+elif [[ "$(echo ${DR_CLOUD} | tr '[:upper:]' '[:lower:]')" == "remote" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="$DR_REMOTE_MINIO_URL"
     export DR_MINIO_URL="$DR_REMOTE_MINIO_URL"
@@ -132,33 +134,33 @@ else
 fi
 
 # Prevent docker swarms to restart
-if [[ "${DR_HOST_X,,}" == "true" ]];
+if [[ "$(echo ${DR_HOST_X} | tr '[:upper:]' '[:lower:]')" == "true" ]];
 then
     DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
     DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
 fi
 
 # Prevent docker swarms to restart
-if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
 then
     DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training-swarm.yml"
     DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval-swarm.yml"
 fi
 
 # Enable logs in CloudWatch
-if [[ "${DR_CLOUD_WATCH_ENABLE,,}" == "true" ]]; then
+if [[ "$(echo ${DR_CLOUD_WATCH_ENABLE} | tr '[:upper:]' '[:lower:]')" == "true" ]]; then
     DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml"
     DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml"
 fi
 
 # Enable local simapp mount
-if [[ -d "${DR_ROBOMAKER_MOUNT_SIMAPP_DIR,,}" ]]; then
+if [[ -d "$(echo ${DR_ROBOMAKER_MOUNT_SIMAPP_DIR} | tr '[:upper:]' '[:lower:]')" ]]; then
     DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml"
     DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml"
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
-if [ "${DR_CLOUD,,}" == "aws" ] && [ $(aws --output json sts get-caller-identity 2> /dev/null | jq '.Arn' | awk /assumed-role/ | wc -l ) -gt 0 ];
+if [[ "$(echo ${DR_CLOUD} | tr '[:upper:]' '[:lower:]')" == "aws" ]] && [ $(aws --output json sts get-caller-identity 2> /dev/null | jq '.Arn' | awk /assumed-role/ | wc -l ) -gt 0 ];
 then
     export DR_LOCAL_S3_AUTH_MODE="role"
 else 
@@ -179,7 +181,7 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
     export MINIO_USERNAME=$(id -u -n)
     export MINIO_GID=$(id -g)
     export MINIO_GROUPNAME=$(id -g -n)
-    if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+    if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
     then
         docker stack deploy $DR_MINIO_COMPOSE_FILE s3
     else
@@ -191,19 +193,19 @@ fi
 ## Version check
 DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/dependencies.json)
 
-SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE 2> /dev/null | jq -r .[].Config.Labels.version)
+SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE 2> /dev/null | jq -r '.[].Config.Labels.version')
 if [ -z "$SAGEMAKER_VER" ]; then SAGEMAKER_VER=$DR_SAGEMAKER_IMAGE; fi
 if ! verlte $DEPENDENCY_VERSION $SAGEMAKER_VER; then
   echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SAGEMAKER_VER."
 fi
 
-ROBOMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-robomaker:$DR_ROBOMAKER_IMAGE 2> /dev/null | jq -r .[].Config.Labels.version )
+ROBOMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-robomaker:$DR_ROBOMAKER_IMAGE 2> /dev/null | jq -r '.[].Config.Labels.version')
 if [ -z "$ROBOMAKER_VER" ]; then ROBOMAKER_VER=$DR_ROBOMAKER_IMAGE; fi
 if ! verlte $DEPENDENCY_VERSION $ROBOMAKER_VER; then
   echo "WARNING: Incompatible version of Deepracer Robomaker. Expected >$DEPENDENCY_VERSION. Got $ROBOMAKER_VER."
 fi
 
-COACH_VER=$(docker inspect awsdeepracercommunity/deepracer-rlcoach:$DR_COACH_IMAGE 2> /dev/null | jq -r .[].Config.Labels.version)
+COACH_VER=$(docker inspect awsdeepracercommunity/deepracer-rlcoach:$DR_COACH_IMAGE 2> /dev/null | jq -r '.[].Config.Labels.version')
 if [ -z "$COACH_VER" ]; then COACH_VER=$DR_COACH_IMAGE; fi
 if ! verlte $DEPENDENCY_VERSION $COACH_VER; then
   echo "WARNING: Incompatible version of Deepracer-for-Cloud Coach. Expected >$DEPENDENCY_VERSION. Got $COACH_VER."
