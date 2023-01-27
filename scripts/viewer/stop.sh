@@ -4,7 +4,7 @@ STACK_NAME="deepracer-$DR_RUN_ID-viewer"
 COMPOSE_FILES=$DR_DIR/docker/docker-compose-webviewer.yml
 
 # Check if we will use Docker Swarm or Docker Compose
-if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
 then
     docker stack rm $STACK_NAME
 else

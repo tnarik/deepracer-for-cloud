@@ -33,8 +33,8 @@ done
 # clone if required
 if [ -n "$OPT_CLONE" ]; then
   echo "Cloning model into s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E"
-  aws  $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX/model s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E/model
-  aws  $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX/ip s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E/ip
+  eval aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 sync s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX/model s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E/model
+  eval aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 sync s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX/ip s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E/ip
   export DR_LOCAL_S3_MODEL_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}-E
 fi
 
@@ -45,7 +45,7 @@ STACK_NAME="deepracer-eval-$DR_RUN_ID"
 export ROBOMAKER_COMMAND="./run.sh run evaluation.launch"
 export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_EVAL_PARAMS_FILE}
 
-if [ ${DR_ROBOMAKER_MOUNT_LOGS,,} = "true" ];
+if [ "$(echo ${DR_ROBOMAKER_MOUNT_LOGS} | tr '[:upper:]' '[:lower:]')" = "true" ];
 then
   COMPOSE_FILES="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DR_DIR/docker/docker-compose-mount.yml"
   export DR_MOUNT_DIR="$DR_DIR/data/logs/robomaker/$DR_LOCAL_S3_MODEL_PREFIX"
@@ -58,7 +58,7 @@ echo "Creating Robomaker configuration in $S3_PATH/$DR_CURRENT_PARAMS_FILE"
 python3 $DR_DIR/scripts/evaluation/prepare-config.py
 
 # Check if we are using Host X -- ensure variables are populated
-if [[ "${DR_HOST_X,,}" == "true" ]];
+if [[ "$(echo ${DR_HOST_X} | tr '[:upper:]' '[:lower:]')" == "true" ]];
 then
   if [[ -n "$DR_DISPLAY" ]]; then
     ROBO_DISPLAY=$DR_DISPLAY
@@ -82,11 +82,11 @@ fi
 
 
 # Check if we will use Docker Swarm or Docker Compose
-if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
 then
-  DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
+  eval DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
 else
-  DISPLAY=$ROBO_DISPLAY docker-compose $COMPOSE_FILES --log-level ERROR -p $STACK_NAME up -d
+  eval DISPLAY=$ROBO_DISPLAY docker-compose $COMPOSE_FILES --log-level ERROR -p $STACK_NAME up -d
 fi
 
 # Request to be quiet. Quitting here.

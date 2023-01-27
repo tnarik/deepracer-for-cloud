@@ -8,6 +8,7 @@ networks:
 
 services:
   minio:
+    entrypoint: /data/entrypoint.sh
     image: minio/minio:${DR_MINIO_IMAGE}
     ports:
       - "9000:9000"

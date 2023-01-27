@@ -45,7 +45,7 @@ done
 FILE=$DR_DIR/tmp/streams-$DR_RUN_ID.html
 
 # Check if we will use Docker Swarm or Docker Compose
-if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
 then
   echo "This script does not support swarm mode. Use `dr-start-viewer`."
   exit

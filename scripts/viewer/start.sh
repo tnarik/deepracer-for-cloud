@@ -61,7 +61,7 @@ server {
 EOF
 
 
-if [[ "${DR_DOCKER_STYLE,,}" != "swarm" ]]; then
+if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" != "swarm" ]]; then
   ROBOMAKER_CONTAINERS=$(docker ps --format "{{.ID}} {{.Names}}" --filter name="deepracer-${DR_RUN_ID}" | grep robomaker | cut -f1 -d\ )
 else
   ROBOMAKER_SERVICE_REPLICAS=$(docker service ps deepracer-${DR_RUN_ID}_robomaker | awk '/robomaker/ { print $1 }')
@@ -102,7 +102,7 @@ echo "}" >> $DR_NGINX_CONF
 STACK_NAME="deepracer-$DR_RUN_ID-viewer"
 COMPOSE_FILES=$DR_DIR/docker/docker-compose-webviewer.yml
 
-if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
 then
   COMPOSE_FILES="$COMPOSE_FILES -c $DR_DIR/docker/docker-compose-webviewer-swarm.yml"
   docker stack deploy -c $COMPOSE_FILES $STACK_NAME
@@ -111,9 +111,9 @@ else
 fi
 
 # Starting browser if using local X and having display defined.
-if [[ -n "${DISPLAY}" && "${DR_HOST_X,,}" == "true" ]]; then
+if [[ -n "${DISPLAY}" && "$(echo ${DR_HOST_X} | tr '[:upper:]' '[:lower:]')" == "true" ]]; then
   echo "Starting browser '$BROWSER'."
-  if [ "${DR_DOCKER_STYLE,,}" == "swarm" ];
+  if [ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ];
   then
     sleep 5
   fi

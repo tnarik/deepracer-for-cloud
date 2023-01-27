@@ -4,7 +4,7 @@ STACK_NAME="deepracer-eval-$DR_RUN_ID"
 RUN_NAME=${DR_LOCAL_S3_MODEL_PREFIX}
 
 # Check if we will use Docker Swarm or Docker Compose
-if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
 then
     docker stack rm $STACK_NAME
 else

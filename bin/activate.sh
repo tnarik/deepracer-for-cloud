@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 verlte() {
     [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
@@ -108,55 +108,55 @@ then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     export DR_MINIO_URL="http://minio:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
-    DR_TRAIN_COMPOSE_FILE=($DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml)
-    DR_EVAL_COMPOSE_FILE=($DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml)
-    DR_MINIO_COMPOSE_FILE=($DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-azure.yml)
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-azure.yml"
 elif [[ "$(echo ${DR_CLOUD} | tr '[:upper:]' '[:lower:]')" == "local" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     export DR_MINIO_URL="http://minio:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
-    DR_TRAIN_COMPOSE_FILE=($DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml)
-    DR_EVAL_COMPOSE_FILE=($DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml)
-    DR_MINIO_COMPOSE_FILE=($DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local.yml)
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local.yml"
 elif [[ "$(echo ${DR_CLOUD} | tr '[:upper:]' '[:lower:]')" == "remote" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="$DR_REMOTE_MINIO_URL"
     export DR_MINIO_URL="$DR_REMOTE_MINIO_URL"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
-    DR_TRAIN_COMPOSE_FILE=($DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml)
-    DR_EVAL_COMPOSE_FILE=($DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml)
-    DR_MINIO_COMPOSE_FILE=()
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_MINIO_COMPOSE_FILE=""
 else
     DR_LOCAL_PROFILE_ENDPOINT_URL=""
-    DR_TRAIN_COMPOSE_FILE=($DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml)
-    DR_EVAL_COMPOSE_FILE=($DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml)
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml"
 fi
 
 # Prevent docker swarms to restart
 if [[ "$(echo ${DR_HOST_X} | tr '[:upper:]' '[:lower:]')" == "true" ]];
 then
-    DR_TRAIN_COMPOSE_FILE=($DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml)
-    DR_EVAL_COMPOSE_FILE=($DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml)
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
 fi
 
 # Prevent docker swarms to restart
 if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
 then
-    DR_TRAIN_COMPOSE_FILE=($DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training-swarm.yml)
-    DR_EVAL_COMPOSE_FILE=($DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval-swarm.yml)
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training-swarm.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval-swarm.yml"
 fi
 
 # Enable logs in CloudWatch
 if [[ "$(echo ${DR_CLOUD_WATCH_ENABLE} | tr '[:upper:]' '[:lower:]')" == "true" ]]; then
-    DR_TRAIN_COMPOSE_FILE=($DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml)
-    DR_EVAL_COMPOSE_FILE=($DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml)
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml"
 fi
 
 # Enable local simapp mount
 if [[ -d "$(echo ${DR_ROBOMAKER_MOUNT_SIMAPP_DIR} | tr '[:upper:]' '[:lower:]')" ]]; then
-    DR_TRAIN_COMPOSE_FILE=($DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml)
-    DR_EVAL_COMPOSE_FILE=($DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml)
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml"
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
@@ -166,8 +166,8 @@ then
 else 
     export DR_LOCAL_ACCESS_KEY_ID=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
     export DR_LOCAL_SECRET_ACCESS_KEY=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
-    DR_TRAIN_COMPOSE_FILE=($DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml)
-    DR_EVAL_COMPOSE_FILE=($DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml)
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
     export DR_UPLOAD_PROFILE="--profile $DR_UPLOAD_S3_PROFILE"
     export DR_LOCAL_S3_AUTH_MODE="profile"
 fi
@@ -183,9 +183,9 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
     export MINIO_GROUPNAME=$(id -g -n)
     if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
     then
-        docker stack deploy ${DR_MINIO_COMPOSE_FILE[@]} s3
+        eval docker stack deploy ${DR_MINIO_COMPOSE_FILE} s3
     else
-        docker-compose ${DR_MINIO_COMPOSE_FILE[@]} -p s3 --log-level ERROR up -d
+        eval docker-compose ${DR_MINIO_COMPOSE_FILE} -p s3 --log-level ERROR up -d
     fi
 
 fi
@@ -212,7 +212,7 @@ if ! verlte $DEPENDENCY_VERSION $COACH_VER; then
 fi
 
 ## Create a dr-local-aws command
-alias dr-local-aws='aws $DR_LOCAL_PROFILE_ENDPOINT_URL'
+alias dr-local-aws='eval aws ${DR_LOCAL_PROFILE_ENDPOINT_URL}'
 
 source $SCRIPT_DIR/scripts_wrapper.sh
 

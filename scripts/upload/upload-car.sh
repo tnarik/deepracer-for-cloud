@@ -74,7 +74,7 @@ fi
 #upload to s3
 if [[ -n "${OPT_LOCAL}" ]];
 then
-    aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 cp carfile.tar.gz s3://${DR_LOCAL_S3_BUCKET}/${DR_UPLOAD_S3_PREFIX}/carfile.tar.gz
+    eval aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 cp carfile.tar.gz s3://${DR_LOCAL_S3_BUCKET}/${DR_UPLOAD_S3_PREFIX}/carfile.tar.gz
 else
     aws ${DR_UPLOAD_PROFILE} s3 cp carfile.tar.gz s3://${DR_UPLOAD_S3_BUCKET}/${DR_UPLOAD_S3_PREFIX}/carfile.tar.gz
 fi
