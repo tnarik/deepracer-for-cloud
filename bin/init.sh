@@ -71,8 +71,8 @@ cd $INSTALL_DIR
 # create directory structure for docker volumes
 mkdir -p $INSTALL_DIR/data $INSTALL_DIR/data/minio $INSTALL_DIR/data/minio/bucket 
 mkdir -p $INSTALL_DIR/data/logs $INSTALL_DIR/data/analysis $INSTALL_DIR/data/scripts $INSTALL_DIR/tmp
-sudo mkdir -p /tmp/sagemaker
-sudo chmod -R g+w /tmp/sagemaker
+mkdir -p /tmp/sagemaker || (echo "/tmp should be writtable by the current user" && exit 1)
+chmod -R g+w /tmp/sagemaker
 
 # create symlink to current user's home .aws directory 
 # NOTE: AWS cli must be installed for this to work
@@ -80,7 +80,7 @@ sudo chmod -R g+w /tmp/sagemaker
 mkdir -p $(eval echo "~${USER}")/.aws $INSTALL_DIR/docker/volumes/
 ln -sf $(eval echo "~${USER}")/.aws  $INSTALL_DIR/docker/volumes/
 
-# copy rewardfunctions
+# copy default reward functions
 mkdir -p $INSTALL_DIR/custom_files 
 cp $INSTALL_DIR/defaults/hyperparameters.json $INSTALL_DIR/custom_files/
 cp $INSTALL_DIR/defaults/model_metadata.json $INSTALL_DIR/custom_files/

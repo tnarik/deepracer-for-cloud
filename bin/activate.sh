@@ -97,9 +97,9 @@ fi
 
 # Check if CUDA_VISIBLE_DEVICES is configured.
 if [[ "$(echo ${DR_CLOUD} | tr '[:upper:]' '[:lower:]')" == "local" ]] && [ -z "${DR_MINIO_IMAGE}" ]; then
-  echo "WARNING: You have not configured DR_MINIO_IMAGE in system.env."
-  echo "         System will default to tag RELEASE.2022-10-24T18-35-07Z"
   export DR_MINIO_IMAGE="RELEASE.2022-10-24T18-35-07Z"
+  echo "WARNING: You have not configured DR_MINIO_IMAGE in system.env."
+  echo "         System will default to tag ${DR_MINIO_IMAGE}"
 fi
 
 # Prepare the docker compose files depending on parameters

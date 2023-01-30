@@ -130,10 +130,10 @@ function dr-logs-sagemaker {
       echo "Sagemaker container $SAGEMAKER_CONTAINER logs opened in separate terminal. "      
     else
       echo 'Could not find a defined x-terminal-emulator. Displaying inline.'
-      docker logs $OPT_TIME -f $SAGEMAKER_CONTAINER
+      eval docker logs $OPT_TIME -f $SAGEMAKER_CONTAINER
     fi
   else
-      docker logs $OPT_TIME -f $SAGEMAKER_CONTAINER
+      eval docker logs $OPT_TIME -f $SAGEMAKER_CONTAINER
   fi
 
 }
@@ -151,7 +151,7 @@ function dr-find-sagemaker {
             CONTAINER_NAME=$(docker ps --format '{{.Names}}' --filter id=$CONTAINER)
             CONTAINER_PREFIX=$(echo $CONTAINER_NAME | perl -n -e'/(.*)_(algo(.*))_./; print $1')
             COMPOSE_SERVICE_NAME=$(echo $CONTAINER_NAME | perl -n -e'/(.*)_(algo(.*))_./; print $2')
-            COMPOSE_FILE=$(sudo find /tmp/sagemaker -name docker-compose.yaml -exec grep -l "$RUN_NAME" {} + | grep $CONTAINER_PREFIX)
+            COMPOSE_FILE=$(find /tmp/sagemaker -name docker-compose.yaml -exec grep -l "$RUN_NAME" {} + | grep $CONTAINER_PREFIX)
             if [[ -n $COMPOSE_FILE ]]; then
                 echo $CONTAINER
                 return
@@ -218,10 +218,10 @@ function dr-logs-robomaker {
       echo "Robomaker #${OPT_REPLICA} ($ROBOMAKER_CONTAINER) logs opened in separate terminal. "
     else
       echo 'Could not find a defined x-terminal-emulator. Displaying inline.'
-      docker logs $OPT_TIME -f $ROBOMAKER_CONTAINER 
+      eval docker logs $OPT_TIME -f $ROBOMAKER_CONTAINER 
     fi
   else
-      docker logs $OPT_TIME -f $ROBOMAKER_CONTAINER
+      eval docker logs $OPT_TIME -f $ROBOMAKER_CONTAINER
   fi
 
 }
