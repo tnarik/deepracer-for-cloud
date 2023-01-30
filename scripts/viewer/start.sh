@@ -105,9 +105,9 @@ COMPOSE_FILES=$DR_DIR/docker/docker-compose-webviewer.yml
 if [[ "$(echo ${DR_DOCKER_STYLE} | tr '[:upper:]' '[:lower:]')" == "swarm" ]];
 then
   COMPOSE_FILES="$COMPOSE_FILES -c $DR_DIR/docker/docker-compose-webviewer-swarm.yml"
-  docker stack deploy -c $COMPOSE_FILES $STACK_NAME
+  eval docker stack deploy -c $COMPOSE_FILES $STACK_NAME
 else
-  docker-compose -f $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d 
+  eval docker-compose -f $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d
 fi
 
 # Starting browser if using local X and having display defined.
@@ -117,13 +117,13 @@ if [[ -n "${DISPLAY}" && "$(echo ${DR_HOST_X} | tr '[:upper:]' '[:lower:]')" == 
   then
     sleep 5
   fi
-  $BROWSER "http://127.0.01:8100" &
+  $BROWSER "http://127.0.0.1:8100" &
 fi
 
 CURRENT_CONTAINER_HASH=$(docker ps | grep dr_viewer | head -c 12)
 
-IP_ADDRESSES="$( hostname -I)";
-echo "The viewer will avaliable on the following hosts after initialization:"
+IP_ADDRESSES="$( hostname -I 2>/dev/null || ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}')";
+echo "The viewer will available on the following hosts after initialization:"
 for ip in $IP_ADDRESSES;
 do
     echo "http://${ip}:${PORT}"
