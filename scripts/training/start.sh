@@ -53,14 +53,14 @@ done
 
 # Ensure Sagemaker's folder is there
 if [ ! -d /tmp/sagemaker ]; then
-  sudo mkdir -p /tmp/sagemaker
-  sudo chmod -R g+w /tmp/sagemaker
+  mkdir -p /tmp/sagemaker || (echo "/tmp should be writtable by the current user" && exit 1)
+  chmod -R g+w /tmp/sagemaker
 fi
 
 #Check if files are available
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"
 
-S3_FILES=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls ${S3_PATH} | wc -l)
+S3_FILES=$(eval aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls ${S3_PATH} | wc -l)
 if [[ "$S3_FILES" -gt 0 ]];
 then
   if [[ -z $OPT_WIPE ]];
@@ -69,7 +69,7 @@ then
     exit 1
   else
     echo "Wiping path $S3_PATH."
-    aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 rm --recursive ${S3_PATH}
+    eval aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 rm --recursive ${S3_PATH}
   fi
 fi
 
